@@ -2,8 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles with modern CSS properties */
 body {
   background: linear-gradient(135deg, #1e3a8a 0%, #7c2d12 100%);
   min-height: 100vh;
   font-family: 'Cinzel', serif;
+  
+  /* Modern text rendering */
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1;
+  font-kerning: normal;
+  
+  /* Modern text size adjust (replaces -webkit-text-size-adjust) */
+  text-size-adjust: 100%;
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+}
+
+/* Ensure proper box-sizing for all elements */
+*, 
+*::before, 
+*::after {
+  box-sizing: border-box;
+}
+
+/* Improve focus visibility for accessibility */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 } 

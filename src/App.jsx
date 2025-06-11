@@ -3,6 +3,7 @@ import { useGameManager } from './hooks/useGameManager'
 import PlayerArea from './components/PlayerArea'
 import BoardArea from './components/BoardArea'
 import GameControls from './components/GameControls'
+import GameEndScreen from './components/GameEndScreen'
 
 function App() {
   const {
@@ -10,6 +11,7 @@ function App() {
     currentPlayer,
     turnNumber,
     gamePhase,
+    winner,
     selectedAttacker,
     playCard,
     endTurn,
@@ -46,7 +48,7 @@ function App() {
                     ⚔️ Attacking with: {players[selectedAttacker.playerIndex].board[selectedAttacker.minionIndex]?.name}
                   </p>
                   <p className="text-green-200 text-sm">
-                    Click an enemy minion or enemy hero to attack!
+                    Attack enemy minions first, then enemy hero's health (❤️) when no minions remain!
                   </p>
                 </div>
                 <button
@@ -73,6 +75,7 @@ function App() {
               canAfford={canAfford}
               selectedAttacker={selectedAttacker}
               onAttackTarget={attackTarget}
+              enemyBoard={players[1].board}
             />
 
             {/* Opponent Board */}
@@ -116,6 +119,7 @@ function App() {
               canAfford={canAfford}
               selectedAttacker={selectedAttacker}
               onAttackTarget={attackTarget}
+              enemyBoard={players[0].board}
             />
           </div>
 
@@ -148,7 +152,9 @@ function App() {
               <h4 className="font-semibold text-amber-200 mb-2">Combat System</h4>
               <ul className="space-y-1">
                 <li>• Click your minions with ⚔️ to select them</li>
-                <li>• Then click enemy minions or hero to attack</li>
+                <li>• <strong>Must attack enemy minions first! 🛡️</strong></li>
+                <li>• Can only attack hero when no minions remain</li>
+                <li>• <strong>Click enemy health (❤️) when unblocked!</strong></li>
                 <li>• Minions deal damage to each other</li>
                 <li>• Dead minions (0 health) are removed</li>
                 <li>• New minions have summoning sickness 💤</li>
@@ -160,13 +166,22 @@ function App() {
                 <li>• Mana increases each turn (max 10)</li>
                 <li>• Draw 1 card at start of turn</li>
                 <li>• Minions can attack after first turn</li>
+                <li>• Win by reducing enemy health to 0!</li>
                 <li>• Click "End Turn" when finished</li>
-                <li>• Green checkmark = playable cards</li>
               </ul>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Game End Screen Overlay */}
+      {gamePhase === 'ended' && winner && (
+        <GameEndScreen
+          winner={winner}
+          onRestart={startGame}
+          players={players}
+        />
+      )}
     </div>
   )
 }

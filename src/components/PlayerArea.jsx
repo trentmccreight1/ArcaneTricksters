@@ -8,7 +8,8 @@ const PlayerArea = ({
   onPlayCard, 
   canAfford,
   selectedAttacker,
-  onAttackTarget
+  onAttackTarget,
+  enemyBoard // This should be the defending player's own board for blocking
 }) => {
   const handleCardClick = (cardIndex) => {
     if (isCurrentPlayer && player.isPlayer) {
@@ -17,12 +18,39 @@ const PlayerArea = ({
   };
 
   const handleHeroClick = () => {
-    if (selectedAttacker && selectedAttacker.playerIndex !== playerIndex) {
+    // Only allow hero attacks if there are no blocking minions on this player's board
+    const hasBlockingMinions = enemyBoard && enemyBoard.length > 0;
+    
+    console.log(`Hero click - Player: ${player.name}, Blocking minions: ${hasBlockingMinions ? enemyBoard.length : 0}`, {
+      selectedAttacker,
+      playerIndex,
+      enemyBoard: enemyBoard?.length,
+      hasBlockingMinions
+    });
+    
+    if (selectedAttacker && selectedAttacker.playerIndex !== playerIndex && !hasBlockingMinions) {
       onAttackTarget('hero', playerIndex);
     }
   };
 
-  const isValidHeroTarget = selectedAttacker && selectedAttacker.playerIndex !== playerIndex;
+  // Check if this hero can be targeted (no blocking minions on this player's board)
+  const hasBlockingMinions = enemyBoard && enemyBoard.length > 0;
+  const isValidHeroTarget = selectedAttacker && 
+                           selectedAttacker.playerIndex !== playerIndex && 
+                           !hasBlockingMinions;
+
+  // Debug logging when selectedAttacker changes
+  React.useEffect(() => {
+    if (selectedAttacker && selectedAttacker.playerIndex !== playerIndex) {
+      console.log(`${player.name} hero targeting check:`, {
+        selectedAttacker,
+        playerIndex,
+        enemyBoardLength: enemyBoard?.length || 0,
+        hasBlockingMinions,
+        isValidHeroTarget
+      });
+    }
+  }, [selectedAttacker, playerIndex, enemyBoard, hasBlockingMinions, isValidHeroTarget, player.name]);
 
   return (
     <div className={`p-4 ${player.isPlayer ? 'bg-blue-900/20' : 'bg-red-900/20'} rounded-lg`}>
@@ -35,18 +63,38 @@ const PlayerArea = ({
             {player.name}
           </h2>
           
-          {/* Health */}
+          {/* Health - Enhanced Hero Portrait */}
           <div 
-            className={`flex items-center rounded-full px-3 py-1 transition-all duration-200 ${
+            className={`relative flex items-center rounded-full px-4 py-2 transition-all duration-200 ${
               isValidHeroTarget 
-                ? 'bg-red-400 ring-4 ring-red-400/50 cursor-pointer hover:bg-red-300' 
+                ? 'bg-red-400 ring-4 ring-red-400/50 cursor-pointer hover:bg-red-300 scale-110 animate-pulse border-4 border-yellow-400' 
+                : hasBlockingMinions && selectedAttacker && selectedAttacker.playerIndex !== playerIndex
+                ? 'bg-gray-600 opacity-50 cursor-not-allowed'
                 : 'bg-red-600'
             }`}
             onClick={isValidHeroTarget ? handleHeroClick : undefined}
+            title={
+              isValidHeroTarget 
+                ? "Click to attack enemy hero!" 
+                : hasBlockingMinions && selectedAttacker && selectedAttacker.playerIndex !== playerIndex
+                ? "Cannot attack hero - enemy has blocking minions!"
+                : `${player.name} Health`
+            }
           >
-            <span className="text-white font-bold">❤️ {player.health}</span>
+            <span className="text-white font-bold text-lg">❤️ {player.health}</span>
             {isValidHeroTarget && (
-              <span className="ml-2 text-yellow-300">🎯</span>
+              <>
+                <span className="ml-2 text-yellow-300 text-lg animate-bounce">🎯</span>
+                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-ping">
+                  ATTACK!
+                </div>
+                <div className="absolute inset-0 bg-red-300/30 rounded-full animate-pulse"></div>
+              </>
+            )}
+            {hasBlockingMinions && selectedAttacker && selectedAttacker.playerIndex !== playerIndex && (
+              <div className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                BLOCKED
+              </div>
             )}
           </div>
           
@@ -68,6 +116,32 @@ const PlayerArea = ({
           </div>
         )}
       </div>
+
+      {/* Hero Attack Instruction Banner */}
+      {isValidHeroTarget && (
+        <div className="mb-4 p-3 bg-red-900/70 border-2 border-red-400 rounded-lg">
+          <div className="flex items-center justify-center text-center">
+            <span className="text-red-300 font-bold text-lg animate-bounce">⚔️</span>
+            <span className="text-white font-semibold mx-2">
+              Click the enemy health (❤️) to attack {player.name} directly!
+            </span>
+            <span className="text-red-300 font-bold text-lg animate-bounce">⚔️</span>
+          </div>
+        </div>
+      )}
+
+      {/* Blocking Minions Warning */}
+      {hasBlockingMinions && selectedAttacker && selectedAttacker.playerIndex !== playerIndex && (
+        <div className="mb-4 p-3 bg-yellow-900/70 border-2 border-yellow-600 rounded-lg">
+          <div className="flex items-center justify-center text-center">
+            <span className="text-yellow-300 font-bold text-lg">🛡️</span>
+            <span className="text-white font-semibold mx-2">
+              {player.name} has {enemyBoard.length} blocking minion{enemyBoard.length > 1 ? 's' : ''} - attack them first!
+            </span>
+            <span className="text-yellow-300 font-bold text-lg">🛡️</span>
+          </div>
+        </div>
+      )}
 
       {/* Hand Cards */}
       <div className="flex space-x-2 overflow-x-auto pb-2">

@@ -17,11 +17,13 @@ const BoardArea = ({
     if (selectedAttacker) {
       // If we have a selected attacker, try to attack this minion
       if (!isPlayer && selectedAttacker.playerIndex !== playerIndex) {
+        console.log('Attacking enemy minion:', minion.name);
         onAttackTarget('minion', playerIndex, minionIndex);
       }
     } else {
-      // Try to select this minion as attacker
+      // Try to select this minion as attacker (only for player's own minions)
       if (isPlayer && isCurrentPlayer && minion.canAttack && !minion.summoningSickness) {
+        console.log('Selecting attacker:', minion.name);
         onSelectAttacker(playerIndex, minionIndex);
       }
     }
@@ -39,6 +41,19 @@ const BoardArea = ({
           {playerName}'s Board ({playerBoard.length}/7)
         </h3>
       </div>
+
+      {/* Minion Attack Instructions */}
+      {selectedAttacker && !isPlayer && playerBoard.length > 0 && (
+        <div className="mb-3 p-2 bg-red-900/70 border border-red-400 rounded-lg">
+          <div className="text-center">
+            <span className="text-red-300 font-bold text-sm animate-bounce">⚔️</span>
+            <span className="text-white text-sm mx-2">
+              Click enemy minions to attack them!
+            </span>
+            <span className="text-red-300 font-bold text-sm animate-bounce">⚔️</span>
+          </div>
+        </div>
+      )}
 
       {/* Minions on Board */}
       <div className="flex justify-center space-x-2 overflow-x-auto">
@@ -65,6 +80,14 @@ const BoardArea = ({
                 isValidTarget={isValidTarget}
                 isDying={minion.currentHealth <= 0}
               />
+              {/* Extra visual indicator for enemy targets */}
+              {isValidTarget && (
+                <div className="text-center mt-1">
+                  <span className="text-red-400 text-xs font-bold animate-pulse">
+                    CLICK TO ATTACK
+                  </span>
+                </div>
+              )}
             </div>
           );
         })}
@@ -75,6 +98,11 @@ const BoardArea = ({
             <div className="text-center">
               <div className="text-4xl mb-2">🏟️</div>
               <div>No minions on board</div>
+              {selectedAttacker && !isPlayer && (
+                <div className="mt-2 text-green-400 text-sm animate-pulse">
+                  No blocking minions - you can attack the hero!
+                </div>
+              )}
             </div>
           </div>
         )}
